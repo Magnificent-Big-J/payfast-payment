@@ -1,0 +1,25 @@
+{
+    "name": "rainwaves/payfast-payment",
+    "description": "This is a PHP package for integrating with the PayFast.co.za payment gateway. It provides a convenient way to handle one-time payments and recurring billing in your PHP applications, with support for both vanilla PHP and Laravel.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "rainwaves\\PayfastPayment\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Joel Mnisi",
+            "email": "joel.mnisi@protonmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "respect/validation": "^2.2",
+        "php": "^7.4|^8.0|^8.1|^8.2"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.5"
+    }
+}
