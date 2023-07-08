@@ -2,10 +2,10 @@
 
 namespace rainwaves\PayfastPayment\Contract;
 
-use rainwaves\PayfastPayment\Contracts\FormInterface;
+use rainwaves\PayfastPayment\Client\PayFastClient;
 
 interface PayFastInterface extends FormInterface
 {
-    public function createForm(): string;
+    public function makePaymentWithAForm(array $input): PayFastClient ;
 
 }
