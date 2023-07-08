@@ -14,7 +14,7 @@ abstract class Arrayable
             $propertyValue = $property->getValue($this);
 
             if ($propertyValue !== null && $propertyValue !== '') {
-                $data[$this->snakeCase($propertyName)] = $propertyValue;
+                $data[$this->snakeCase($propertyName)] = trim($propertyValue);
             }
         }
 
