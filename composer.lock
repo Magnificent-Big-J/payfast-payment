@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dbf9a44fce4ad22346aa68888b468caa",
+    "content-hash": "cb57d4406fe1cefcbd2c136b92a31dbc",
     "packages": [
         {
             "name": "respect/stringifier",
@@ -7797,7 +7797,9 @@
     "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "php": "^7.4|^8.0|^8.1|^8.2"
+    },
     "platform-dev": [],
     "plugin-api-version": "2.3.0"
 }
