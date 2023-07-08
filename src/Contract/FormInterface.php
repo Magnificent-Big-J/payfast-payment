@@ -1,6 +1,6 @@
 <?php
 
-namespace rainwaves\PayfastPayment\Contracts;
+namespace rainwaves\PayfastPayment\Contract;
 
 interface FormInterface
 {
