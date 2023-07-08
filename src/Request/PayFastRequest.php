@@ -21,7 +21,7 @@ class PayFastRequest extends Arrayable
     public ?string $itemDescription = null;
     public ?string $customInt = null;
     public ?string $customStr = null;
-    public ?bool $emailConfirmation = true;
+    public ?bool $emailConfirmation = false;
     public ?string $confirmationAddress = null;
 
     public function __construct(\stdClass $input, \stdClass $config)
@@ -36,12 +36,12 @@ class PayFastRequest extends Arrayable
         $this->emailAddress = $input->email_address ?? $this->emailAddress;
         $this->cellNumber = $input->cell_number ?? $this->cellNumber;
         $this->mPaymentId = $input->m_payment_id ?? $this->mPaymentId;
-        $this->amount = $input->amount;
+        $this->amount = number_format( sprintf( '%.2f', $input->amount ), 2, '.', '' );
         $this->itemName = $input->item_name;
         $this->itemDescription = $input->item_description ?? $this->itemDescription;
         $this->customInt = $input->custom_int ?? $this->customInt;
         $this->customStr = $input->custom_str ?? $this->customStr;
-        $this->emailConfirmation = $input->email_confirmation ?? $this->emailConfirmation;
+        $this->emailConfirmation = ($input->email_confirmation ?? $this->emailConfirmation) ? 1: 0;
         $this->confirmationAddress = $input->confirmation_aSddress ?? $this->confirmationAddress;
     }
 
