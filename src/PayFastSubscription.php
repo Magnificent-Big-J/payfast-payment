@@ -5,6 +5,7 @@ namespace rainwaves\PayfastPayment;
 use rainwaves\PayfastPayment\Client\PayFastSubscriptionClient;
 use rainwaves\PayfastPayment\Contract\PayFastSubscriptionInterface;
 use rainwaves\PayfastPayment\Model\Route;
+use rainwaves\PayfastPayment\Request\PayFastSubscriptionRequest;
 use stdClass;
 
 class PayFastSubscription implements PayFastSubscriptionInterface
@@ -25,5 +26,10 @@ class PayFastSubscription implements PayFastSubscriptionInterface
     public function createSubscriptionWithAForm(array $input): PayFastSubscriptionClient
     {
         return $this->payFastSubscription->createSubscriptionWithAForm($input);
+    }
+
+    public function getRequest(): PayFastSubscriptionRequest
+    {
+        return $this->payFastSubscription->getRequest();
     }
 }

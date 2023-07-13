@@ -5,6 +5,7 @@ namespace rainwaves\PayfastPayment;
 use rainwaves\PayfastPayment\Client\PayFastClient;
 use rainwaves\PayfastPayment\Contract\PayFastInterface;
 use rainwaves\PayfastPayment\Model\Route;
+use rainwaves\PayfastPayment\Request\PayFastRequest;
 use stdClass;
 
 class PayFast implements PayFastInterface
@@ -29,4 +30,9 @@ class PayFast implements PayFastInterface
 
         return  $this->payFastClient;
     }
+    public function getRequest(): PayFastRequest
+    {
+        return $this->payFastClient->getRequest();
+    }
+
 }
