@@ -39,6 +39,9 @@ class Sequence
         'recurring_amount',
         'frequency',
         'cycles',
+        'subscription_notify_email',
+        'subscription_notify_webhook',
+        'subscription_notify_buyer',
         'passphrase'
     ];
 
