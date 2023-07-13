@@ -13,7 +13,7 @@ abstract class Arrayable
             $propertyName = $property->getName();
             $propertyValue = $property->getValue($this);
 
-            if ($propertyValue !== null && $propertyValue !== '') {
+            if ($this->hasValue($propertyValue)) {
                 $data[$this->snakeCase($propertyName)] = trim($propertyValue);
             }
         }
@@ -25,5 +25,14 @@ abstract class Arrayable
     {
         $value = preg_replace('/(.)(?=[A-Z])/u', '$1_', $value);
         return strtolower($value);
+    }
+
+    private function hasValue($value): bool
+    {
+        if (is_null(trim($value)) || trim($value) === '') {
+            return false;
+        }
+
+        return true;
     }
 }
