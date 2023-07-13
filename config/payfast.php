@@ -8,4 +8,5 @@ return [
   'return_url'=> env('RETURN_URL', 'https://www.example.com/success'),
   'cancel_url'=> env('CANCEL_URL', 'https://www.example.com/cancel'),
   'notify_url'=> env('NOTIFY_URL', 'https://www.example.com/notify'),
+  'pass_phrase' => env('PASS_PHRASE', ''),
 ];
