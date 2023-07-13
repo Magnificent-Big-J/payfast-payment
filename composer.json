@@ -8,6 +8,11 @@
             "rainwaves\\PayfastPayment\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "rainwaves\\PayfastPayment\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Joel Mnisi",
