@@ -36,4 +36,9 @@ class PayFastSubscriptionClient implements PayFastSubscriptionInterface
 
         return $this;
     }
+
+    public function getRequest(): PayFastSubscriptionRequest
+    {
+        return $this->request;
+    }
 }

@@ -12,13 +12,15 @@ use rainwaves\PayfastPayment\Validation\PayFastValidation;
 class PayFastClient implements PayFastInterface
 {
     use SignatureTrait;
+
     private \stdClass $config;
+    private PayFastRequest $request;
+
     public function __construct(\stdClass $config)
     {
         $this->config = $config;
     }
 
-    private PayFastRequest $request;
     public function createForm(): string
     {
         $input = $this->request->toArray();
@@ -31,9 +33,15 @@ class PayFastClient implements PayFastInterface
     public function makePaymentWithAForm(array $input): self
     {
         PayFastValidation::validate($input);
-        $input = (object)$input;
+        $input = (object) $input;
         $this->request = new PayFastRequest($input, $this->config);
 
         return $this;
     }
+
+    public function getRequest(): PayFastRequest
+    {
+        return $this->request;
+    }
+
 }
