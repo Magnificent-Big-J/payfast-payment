@@ -23,7 +23,7 @@ class PayFastSubscriptionClient implements PayFastSubscriptionInterface
     {
         $input = $this->request->toArray();
 
-        $signature = $this->generateSignature($input, 'jt7NOE43FZPn');
+        $signature = $this->generateSignature($input, $this->config->pass_phrase);
         $input = Sequence::order($input);
         $input['signature'] = $signature;
         return FormBuilder::buildForm($input, $this->config->url);
