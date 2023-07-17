@@ -26,5 +26,15 @@
     },
     "require-dev": {
         "orchestra/testbench": "^8.5"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "rainwaves\\PayfastPayment\\PayFastServiceProvider"
+            ],
+            "config": [
+                "payfast.php"
+            ]
+        }
     }
 }
