@@ -1,6 +1,6 @@
 <?php
 
-namespace rainwaves\PayfastPayment\Request;
+namespace rainwaves\PayfastPayment\Response;
 
 class PayFastSubscriptionResponse extends PayFastResponse
 {

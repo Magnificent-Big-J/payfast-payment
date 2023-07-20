@@ -1,6 +1,6 @@
 <?php
 
-namespace rainwaves\PayfastPayment\Request;
+namespace rainwaves\PayfastPayment\Response;
 
 use rainwaves\PayfastPayment\Abstraction\Arrayable;
 
