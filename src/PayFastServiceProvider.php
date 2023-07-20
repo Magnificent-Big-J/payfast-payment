@@ -3,7 +3,7 @@
 namespace rainwaves\PayfastPayment;
 
 use Carbon\Laravel\ServiceProvider;
-use rainwaves\PayfastPayment\Client\PayFastClient;
+use rainwaves\PayfastPayment\Contract\PayFastInterface;
 use rainwaves\PayfastPayment\Contract\PayFastSubscriptionInterface;
 
 class PayFastServiceProvider extends ServiceProvider
@@ -24,7 +24,7 @@ class PayFastServiceProvider extends ServiceProvider
             'pass_phrase' => config('payfast.pass_phrase'),
         );
 
-        $this->app->bind(PayFastClient::class, function ($app) use ($config) {
+        $this->app->bind(PayFastInterface::class, function ($app) use ($config) {
 
             return new PayFast($config);
         });
