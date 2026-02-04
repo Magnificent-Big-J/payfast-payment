@@ -1,23 +1,30 @@
 # Payfast Payment Package
 
-This is a PHP package for integrating with the [PayFast](https://developers.payfast.co.za/docs#home) payment gateway. It provides a convenient way to handle one-time payments and recurring billing in your PHP applications, with support for both vanilla PHP and Laravel.
+This is a PHP package for integrating with the PayFast payment gateway. It provides a convenient way to handle one-time payments and recurring billing in your PHP applications, with support for both vanilla PHP and Laravel.
 
 ## Installation
 
-You can install the PayGate Payment Package via Composer. Run the following command in your project directory:
+You can install the package via Composer. Run the following command in your project directory:
 ```php
 composer require rainwaves/payfast-payment
 ```
 ## Configuration
 
-After installing the package, you need to configure it with your PayGate credentials. In Laravel, you'll need to publish the config file and set the credentials in your .env file:
+After installing the package, you need to configure it with your PayFast credentials. In Laravel, you'll need to publish the config file and set the credentials in your .env file:
 - merchant_id=XXXXXXXX
 - merchant_key=XXXXXXXXXX
-- env=XXXXXXXX
+- env=local|production
 - return_url=XXXXXXXXXXXX
 - cancel_url=XXXXXXXXXXXX
 - notify_url=XXXXXXXXXXXX
 - pass_phrase=XXXXXXXXXXXX
+
+## Compatibility
+
+- PHP: 7.4+ and 8.x (including 8.3 and 8.4).
+- Laravel: 8.x through 12.x.
+
+Laravel 10+ requires PHP 8.1+, and Laravel 11+ requires PHP 8.2+. Align your project PHP version accordingly.
 
 ## Usage
 
@@ -27,7 +34,7 @@ After installing the package, you need to configure it with your PayGate credent
 require 'vendor/autoload.php';
 
 $config = array('merchant_id' => 10000100,
-    'merchant_key'=> env('MERCHANT_KEY', '46f0cd694581a'),
+    'merchant_key'=> '46f0cd694581a',
     'env'=> 'local',
     'return_url'=> 'https://www.example.com/success',
     'cancel_url'=> 'https://www.example.com/cancel',
@@ -42,17 +49,18 @@ $input = array(
     'email_address'=> 'test@test.com',
     'm_payment_id' => '1234',
     'email_confirmation' => true,
+    'custom_str1' => 'example',
 );
 
 $payFast = new PayFast($config);
 echo $payFast->makePaymentWithAForm($input)->createForm();
 ````
 
-A form with hidden input will be returned
+A form with hidden inputs will be returned.
 
 
 ### Laravel
-Assuming you have the necessary routes and views set up, here's an example of how to use the PayGate Payment Package in Laravel:
+Assuming you have the necessary routes and views set up, here's an example of how to use the package in Laravel:
 ````php
 use Illuminate\Http\Request;
 use rainwaves\PayfastPayment\PayFast;
@@ -79,6 +87,7 @@ class PaymentController extends Controller
             'email_address' => $request->input('email'),
             'm_payment_id' => '1234',
             'email_confirmation' => true,
+            'custom_str1' => 'example',
         ];
 
         $payFast = new PayFast($config);
@@ -87,6 +96,66 @@ class PaymentController extends Controller
 }
 
 ````
+
+### Subscriptions
+
+````php
+use rainwaves\PayfastPayment\PayFastSubscription;
+use rainwaves\PayfastPayment\Model\Frequency;
+
+$payFast = new PayFastSubscription($config);
+$input = [
+    'amount' => 100.00,
+    'item_name' => 'Gold Plan',
+    'billing_date' => '2026-03-01',
+    'recurring_amount' => 100.00,
+    'frequency' => Frequency::MONTHLY,
+    'cycles' => 0, // 0 = indefinite
+    'subscription_notify_email' => true,
+    'subscription_notify_webhook' => true,
+    'subscription_notify_buyer' => true,
+];
+
+echo $payFast->createSubscriptionWithAForm($input)->createForm();
+````
+
+### Optional Fields
+- `custom_int1..5`, `custom_str1..5`
+- `payment_method`
+- `email_confirmation`, `confirmation_address`
+
+### ITN (Instant Transaction Notification) Validation
+
+PayFast requires verification of ITN messages (signature, source, and data). You can validate signatures and optionally call the PayFast validation endpoint:
+
+````php
+use rainwaves\PayfastPayment\Itn\PayFastItnValidator;
+
+$payload = $_POST; // ITN payload
+$validator = new PayFastItnValidator($payload, config('payfast.pass_phrase'));
+
+if (!$validator->validateSignature()) {
+    // invalid signature
+}
+
+if (!$validator->validateAmount('100.00')) {
+    // amount mismatch
+}
+
+if (!$validator->validateMerchantId(config('payfast.merchant_id'))) {
+    // merchant mismatch
+}
+
+// Optional: validate with PayFast endpoint (see PayFast docs for URL)
+if (!$validator->validateWithPayFastEndpoint($validateUrl)) {
+    // validation failed
+}
+````
+
+## Notes
+- PayFast recommends enabling a passphrase on your account for secure signature validation, and recurring billing requires a passphrase to avoid signature errors.
+- Ensure you verify ITN requests per PayFast’s integration requirements (signature, source IP, and amount checks).
+
 ## Testing
 To run the PHPUnit test cases for the package, use the following command:
 

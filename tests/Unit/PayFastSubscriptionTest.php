@@ -14,7 +14,7 @@ class PayFastSubscriptionTest extends TestCase
     {
         parent::setUp();
         $this->config = array('merchant_id' => 10000100,
-            'merchant_key'=> env('MERCHANT_KEY', '46f0cd694581a'),
+            'merchant_key'=> '46f0cd694581a',
             'env'=> 'local',
             'return_url'=> 'https://www.example.com/success',
             'cancel_url'=> 'https://www.example.com/cancel',
@@ -58,6 +58,7 @@ class PayFastSubscriptionTest extends TestCase
         $request = $client->getRequest();
 
         $this->assertInstanceOf(PayFastSubscriptionRequest::class, $request);
-        $this->assertEquals((object) $this->input, $request->getRequest());
+        $this->assertSame('Test Subscription', $request->itemName);
+        $this->assertSame('100.00', $request->recurringAmount);
     }
 }
