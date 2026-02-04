@@ -49,8 +49,24 @@ class PayFastValidationTest extends TestCase
         ];
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid input data: amount must not be empty');
+        $this->expectExceptionMessage('Invalid input data: amount must be positive');
 
         PayFastValidation::validate($input);
+    }
+
+    /**
+     * @test
+     */
+    public function testSubscriptionValidationFailsWithMissingFields()
+    {
+        $input = [
+            'amount' => 100,
+            'item_name' => 'Test Subscription'
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid input data: billing_date must be present');
+
+        PayFastValidation::validateSubscription($input);
     }
 }

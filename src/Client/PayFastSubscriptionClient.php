@@ -30,7 +30,7 @@ class PayFastSubscriptionClient implements PayFastSubscriptionInterface
     }
     public function createSubscriptionWithAForm(array $input): PayFastSubscriptionClient
     {
-        PayFastValidation::validate($input);
+        PayFastValidation::validateSubscription($input);
         $input = (object)$input;
         $this->request = new PayFastSubscriptionRequest($input, $this->config);
 
