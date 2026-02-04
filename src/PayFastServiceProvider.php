@@ -2,7 +2,7 @@
 
 namespace rainwaves\PayfastPayment;
 
-use Carbon\Laravel\ServiceProvider;
+use Illuminate\Support\ServiceProvider;
 use rainwaves\PayfastPayment\Contract\PayFastInterface;
 use rainwaves\PayfastPayment\Contract\PayFastSubscriptionInterface;
 
@@ -10,8 +10,13 @@ class PayFastServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->mergeConfigFrom(__DIR__ . '/../config/payfast.php', 'payfast');
+    }
+
+    public function boot()
+    {
         $this->publishes([
-            __DIR__.'/../config/payfast.php' => config_path('payfast.php'),
+            __DIR__ . '/../config/payfast.php' => config_path('payfast.php'),
         ], 'payfast-config');
 
         $config = array(
