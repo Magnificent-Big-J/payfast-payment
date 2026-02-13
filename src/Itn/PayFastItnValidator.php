@@ -9,15 +9,24 @@ class PayFastItnValidator
 {
     private array $data;
     private ?string $passPhrase;
+    private ?string $rawBody;
 
-    public function __construct(array $data, ?string $passPhrase = null)
+    public function __construct(array $data, ?string $passPhrase = null, ?string $rawBody = null)
     {
         $this->data = $data;
         $this->passPhrase = $passPhrase;
+        $this->rawBody = $rawBody;
     }
 
     public function validateSignature(): bool
     {
+        if (is_string($this->rawBody) && $this->rawBody !== '') {
+            $rawSignature = $this->validateSignatureFromRawBody();
+            if ($rawSignature !== null) {
+                return $rawSignature;
+            }
+        }
+
         if (!isset($this->data['signature'])) {
             return false;
         }
@@ -96,6 +105,23 @@ class PayFastItnValidator
         }
 
         return md5($this->buildQuery($fields));
+    }
+
+    private function validateSignatureFromRawBody(): ?bool
+    {
+        if (! isset($this->data['signature'])) {
+            return null;
+        }
+
+        $rawBodyNoSig = preg_replace('/(^|&)signature=[^&]*/', '', $this->rawBody);
+        $rawBodyNoSig = ltrim((string) $rawBodyNoSig, '&');
+
+        if ($this->passPhrase !== null && $this->passPhrase !== '') {
+            $rawBodyNoSig .= '&passphrase=' . urlencode($this->passPhrase);
+        }
+
+        $calculated = md5($rawBodyNoSig);
+        return hash_equals($calculated, (string) $this->data['signature']);
     }
 
     private function buildQuery(array $fields): string

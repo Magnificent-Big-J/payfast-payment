@@ -132,7 +132,8 @@ PayFast requires verification of ITN messages (signature, source, and data). You
 use rainwaves\PayfastPayment\Itn\PayFastItnValidator;
 
 $payload = $_POST; // ITN payload
-$validator = new PayFastItnValidator($payload, config('payfast.pass_phrase'));
+$rawBody = file_get_contents('php://input'); // raw ITN body
+$validator = new PayFastItnValidator($payload, config('payfast.pass_phrase'), $rawBody);
 
 if (!$validator->validateSignature()) {
     // invalid signature
