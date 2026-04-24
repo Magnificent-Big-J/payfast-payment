@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.7.0 - 2026-04-24
+
+### Added
+- Laravel 13 support (`orchestra/testbench ^11.0`).
+- PHP 8.5 support added to `composer.json`.
+- `illuminate/support ^10|^11|^12|^13` declared as an explicit `require` dependency.
+- `getRequest()` added to `PayFastInterface` and `PayFastSubscriptionInterface` — the method was already implemented on both clients but absent from the contracts, breaking static analysis.
+- `PayFastException::notInitialized()` named constructor for clearer error when `createForm()` is called before the payment/subscription builder method.
+
+### Changed
+- Config env keys now use a `PAYFAST_` prefix (`PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_ENV`, `PAYFAST_RETURN_URL`, `PAYFAST_CANCEL_URL`, `PAYFAST_NOTIFY_URL`, `PAYFAST_PASS_PHRASE`). The old unprefixed names remain as fallbacks for backwards compatibility.
+- `PayFastServiceProvider`: config is now read inside the IoC closure (lazy), rather than captured at `boot()` time. This respects deferred config resolution and dynamic config changes.
+- Amount validation now enforces the PayFast maximum of `999,999.99` (`MAX_AMOUNT` was already defined but never applied to the validator).
+- `recurring_amount` in subscription validation also enforces `MAX_AMOUNT`.
+- `createForm()` on both clients now throws `PayFastException` with a clear message if called before the builder method, instead of triggering a PHP `TypeError` on uninitialized property access.
+
+### Fixed
+- `PayFastItnValidator::validateSignatureFromRawBody()`: passphrase was appended at the end of the query string instead of being inserted at its correct alphabetical position. PayFast sorts all fields (including passphrase) before signing, so the verification hash never matched. Fixed by parsing the raw body, inserting passphrase, sorting, and re-encoding consistently with `PayFastSignatureHelper::buildQuery`.
+- Test: `testResponseHandlesMissingOptionalFields` incorrectly asserted `mPaymentId` was null while `m_payment_id` was present in the base fixture. Assertion updated to check `nameLast`, which is genuinely absent.
+
+---
+
 ## v1.6.0 - 2026-02-13
 - Validate ITN signatures using raw request body to preserve field order.
 - Allow ITN validator to accept raw body input for signature checks.
