@@ -10,12 +10,16 @@ abstract class Arrayable
         $reflection = new \ReflectionClass($this);
 
         foreach ($reflection->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
-            $propertyName = $property->getName();
+            $propertyName  = $property->getName();
             $propertyValue = $property->getValue($this);
 
-            if ($this->hasValue($propertyValue)) {
-                $data[$this->snakeCase($propertyName)] = trim($propertyValue);
+            if (!$this->hasValue($propertyValue)) {
+                continue;
             }
+
+            $data[$this->snakeCase($propertyName)] = is_string($propertyValue)
+                ? trim($propertyValue)
+                : $propertyValue;
         }
 
         return $data;
@@ -29,10 +33,12 @@ abstract class Arrayable
 
     private function hasValue($value): bool
     {
-        if (is_null(trim($value)) || trim($value) === '') {
+        if ($value === null) {
             return false;
         }
-
+        if (is_string($value) && trim($value) === '') {
+            return false;
+        }
         return true;
     }
 }
