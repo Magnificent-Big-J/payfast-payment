@@ -1,12 +1,11 @@
-
 <?php
 
 return [
-  'merchant_id'=> env('MERCHANT_ID', '10000100'),
-  'merchant_key'=> env('MERCHANT_KEY', '46f0cd694581a'),
-  'env'=> env('ENVIRONMENT', 'local'),
-  'return_url'=> env('RETURN_URL', 'https://www.example.com/success'),
-  'cancel_url'=> env('CANCEL_URL', 'https://www.example.com/cancel'),
-  'notify_url'=> env('NOTIFY_URL', 'https://www.example.com/notify'),
-  'pass_phrase' => env('PASS_PHRASE', ''),
+    'merchant_id'  => env('PAYFAST_MERCHANT_ID', env('MERCHANT_ID', '10000100')),
+    'merchant_key' => env('PAYFAST_MERCHANT_KEY', env('MERCHANT_KEY', '46f0cd694581a')),
+    'env'          => env('PAYFAST_ENV', env('ENVIRONMENT', 'local')),
+    'return_url'   => env('PAYFAST_RETURN_URL', env('RETURN_URL', 'https://www.example.com/success')),
+    'cancel_url'   => env('PAYFAST_CANCEL_URL', env('CANCEL_URL', 'https://www.example.com/cancel')),
+    'notify_url'   => env('PAYFAST_NOTIFY_URL', env('NOTIFY_URL', 'https://www.example.com/notify')),
+    'pass_phrase'  => env('PAYFAST_PASS_PHRASE', env('PASS_PHRASE', '')),
 ];

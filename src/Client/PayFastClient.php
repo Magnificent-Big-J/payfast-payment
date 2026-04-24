@@ -4,6 +4,7 @@ namespace rainwaves\PayfastPayment\Client;
 
 use rainwaves\PayfastPayment\Contract\PayFastInterface;
 use rainwaves\PayfastPayment\Entities\SignatureTrait;
+use rainwaves\PayfastPayment\Exception\PayFastException;
 use rainwaves\PayfastPayment\Form\FormBuilder;
 use rainwaves\PayfastPayment\Model\Sequence;
 use rainwaves\PayfastPayment\Request\PayFastRequest;
@@ -23,6 +24,10 @@ class PayFastClient implements PayFastInterface
 
     public function createForm(): string
     {
+        if (!isset($this->request)) {
+            throw PayFastException::notInitialized('makePaymentWithAForm');
+        }
+
         $input = $this->request->toArray();
         $signature = $this->generateSignature($input, $this->config->pass_phrase);
         $input = Sequence::order($input);
@@ -43,5 +48,4 @@ class PayFastClient implements PayFastInterface
     {
         return $this->request;
     }
-
 }

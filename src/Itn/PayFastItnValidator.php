@@ -2,8 +2,10 @@
 
 namespace rainwaves\PayfastPayment\Itn;
 
+use rainwaves\PayfastPayment\Exception\PayFastException;
 use rainwaves\PayfastPayment\Response\PayFastResponse;
 use rainwaves\PayfastPayment\Response\PayFastSubscriptionResponse;
+use rainwaves\PayfastPayment\Support\PayFastSignatureHelper;
 
 class PayFastItnValidator
 {
@@ -13,17 +15,17 @@ class PayFastItnValidator
 
     public function __construct(array $data, ?string $passPhrase = null, ?string $rawBody = null)
     {
-        $this->data = $data;
+        $this->data       = $data;
         $this->passPhrase = $passPhrase;
-        $this->rawBody = $rawBody;
+        $this->rawBody    = $rawBody;
     }
 
     public function validateSignature(): bool
     {
         if (is_string($this->rawBody) && $this->rawBody !== '') {
-            $rawSignature = $this->validateSignatureFromRawBody();
-            if ($rawSignature !== null) {
-                return $rawSignature;
+            $rawResult = $this->validateSignatureFromRawBody();
+            if ($rawResult !== null) {
+                return $rawResult;
             }
         }
 
@@ -31,9 +33,7 @@ class PayFastItnValidator
             return false;
         }
 
-        $signature = $this->data['signature'];
-        $calculated = $this->generateItnSignature();
-        return hash_equals($calculated, $signature);
+        return hash_equals($this->generateItnSignature(), (string) $this->data['signature']);
     }
 
     public function validateAmount(string $expectedAmount): bool
@@ -43,7 +43,8 @@ class PayFastItnValidator
         }
 
         $expected = sprintf('%.2f', (float) $expectedAmount);
-        $actual = sprintf('%.2f', (float) $this->data['amount_gross']);
+        $actual   = sprintf('%.2f', (float) $this->data['amount_gross']);
+
         return hash_equals($expected, $actual);
     }
 
@@ -56,25 +57,73 @@ class PayFastItnValidator
         return hash_equals((string) $expectedMerchantId, (string) $this->data['merchant_id']);
     }
 
+    /**
+     * Validate that the ITN request originated from a known PayFast IP range.
+     *
+     * Pass $_SERVER['REMOTE_ADDR'] (or equivalent) as $remoteIp.
+     * Set $sandboxMode = true when using the PayFast sandbox environment.
+     *
+     * IMPORTANT: Always call this before trusting any other part of the ITN payload.
+     */
+    public function validateSourceIp(string $remoteIp, bool $sandboxMode = false): bool
+    {
+        return PayFastIpValidator::isValid($remoteIp, $sandboxMode);
+    }
+
+    /**
+     * Confirm the ITN with PayFast's server-side validation endpoint.
+     *
+     * Uses cURL with full TLS certificate verification. Throws PayFastException on
+     * network failure so callers can distinguish "cannot reach PayFast" from "INVALID".
+     *
+     * @throws PayFastException when the HTTP request itself fails.
+     */
     public function validateWithPayFastEndpoint(string $validateUrl): bool
     {
-        $query = http_build_query($this->data, '', '&', PHP_QUERY_RFC1738);
-        $options = [
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
-                'content' => $query,
-                'timeout' => 30,
-            ],
-        ];
-
-        $context = stream_context_create($options);
-        $result = @file_get_contents($validateUrl, false, $context);
-        if ($result === false) {
-            return false;
+        if (!function_exists('curl_init')) {
+            throw PayFastException::curlNotAvailable();
         }
 
-        return trim($result) === 'VALID';
+        $query = http_build_query($this->data, '', '&', PHP_QUERY_RFC1738);
+
+        $ch = curl_init($validateUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $query,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_USERAGENT      => 'rainwaves/payfast-payment PHP/' . PHP_VERSION,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+        ]);
+
+        $result = curl_exec($ch);
+        $error  = curl_error($ch);
+        $errno  = curl_errno($ch);
+        curl_close($ch);
+
+        if ($result === false) {
+            throw PayFastException::endpointUnreachable($validateUrl, sprintf('[%d] %s', $errno, $error));
+        }
+
+        return trim((string) $result) === 'VALID';
+    }
+
+    /**
+     * Return the PayFast transaction ID (pf_payment_id).
+     *
+     * Persist and check this value to prevent replay attacks: if the same
+     * pf_payment_id arrives more than once, reject the duplicate ITN.
+     */
+    public function getPaymentId(): ?string
+    {
+        return isset($this->data['pf_payment_id']) ? (string) $this->data['pf_payment_id'] : null;
+    }
+
+    public function getPaymentStatus(): ?string
+    {
+        return $this->data['payment_status'] ?? null;
     }
 
     public function response(): PayFastResponse
@@ -96,6 +145,7 @@ class PayFastItnValidator
         }
 
         ksort($data);
+
         $fields = [];
         foreach ($data as $key => $value) {
             if ($value === null || $value === '') {
@@ -104,31 +154,37 @@ class PayFastItnValidator
             $fields[$key] = trim((string) $value);
         }
 
-        return md5($this->buildQuery($fields));
+        return md5(PayFastSignatureHelper::buildQuery($fields));
     }
 
     private function validateSignatureFromRawBody(): ?bool
     {
-        if (! isset($this->data['signature'])) {
+        if (!isset($this->data['signature'])) {
             return null;
         }
 
         $rawBodyNoSig = preg_replace('/(^|&)signature=[^&]*/', '', $this->rawBody);
         $rawBodyNoSig = ltrim((string) $rawBodyNoSig, '&');
 
+        // Parse so passphrase can be inserted at its correct alphabetical position.
+        // PayFast sorts all fields (including passphrase) before signing, so we must
+        // mirror that order rather than blindly appending.
+        parse_str($rawBodyNoSig, $parsed);
+
         if ($this->passPhrase !== null && $this->passPhrase !== '') {
-            $rawBodyNoSig .= '&passphrase=' . urlencode($this->passPhrase);
+            $parsed['passphrase'] = $this->passPhrase;
         }
 
-        $calculated = md5($rawBodyNoSig);
-        return hash_equals($calculated, (string) $this->data['signature']);
-    }
+        ksort($parsed);
 
-    private function buildQuery(array $fields): string
-    {
-        $query = http_build_query($fields, '', '&', PHP_QUERY_RFC1738);
-        return preg_replace_callback('/%[0-9a-f]{2}/', function ($match) {
-            return strtoupper($match[0]);
-        }, $query);
+        $fields = [];
+        foreach ($parsed as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            $fields[$key] = trim((string) $value);
+        }
+
+        return hash_equals(md5(PayFastSignatureHelper::buildQuery($fields)), (string) $this->data['signature']);
     }
 }
