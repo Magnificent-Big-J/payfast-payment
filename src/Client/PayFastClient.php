@@ -3,11 +3,14 @@
 namespace rainwaves\PayfastPayment\Client;
 
 use rainwaves\PayfastPayment\Contract\PayFastInterface;
+use rainwaves\PayfastPayment\Contract\HttpClientInterface;
 use rainwaves\PayfastPayment\Entities\SignatureTrait;
 use rainwaves\PayfastPayment\Exception\PayFastException;
 use rainwaves\PayfastPayment\Form\FormBuilder;
+use rainwaves\PayfastPayment\Model\Route;
 use rainwaves\PayfastPayment\Model\Sequence;
 use rainwaves\PayfastPayment\Request\PayFastRequest;
+use rainwaves\PayfastPayment\Support\Environment;
 use rainwaves\PayfastPayment\Validation\PayFastValidation;
 
 class PayFastClient implements PayFastInterface
@@ -20,6 +23,32 @@ class PayFastClient implements PayFastInterface
     public function __construct(\stdClass $config)
     {
         $this->config = $config;
+    }
+
+    public static function make(array $config, ?HttpClientInterface $http = null): self
+    {
+        $environment = Environment::normalize((string) ($config['environment'] ?? $config['env'] ?? Environment::SANDBOX));
+        $config['environment'] = $environment;
+        $config['env'] = $environment;
+        $config['url'] = Route::getUrl($environment);
+        $config['http'] = $http;
+
+        return new self((object) $config);
+    }
+
+    public function checkout(): self
+    {
+        return $this;
+    }
+
+    public function subscriptions(): SubscriptionClient
+    {
+        return new SubscriptionClient((array) $this->config, $this->config->http ?? null);
+    }
+
+    public function itn(): \rainwaves\PayfastPayment\Client\ItnClient
+    {
+        return new ItnClient((array) $this->config);
     }
 
     public function createForm(): string

@@ -12,6 +12,7 @@ composer require rainwaves/payfast-payment
 
 | Package | PHP | Laravel |
 |---------|-----|---------|
+| v2.x    | 8.2 – 8.5 | 11 – 13 |
 | v1.7.x  | 7.4 – 8.5 | 10 – 13 |
 
 Laravel 10+ requires PHP 8.1+. Laravel 11+ requires PHP 8.2+. Laravel 12+ requires PHP 8.2+. Laravel 13+ requires PHP 8.3+.
@@ -31,7 +32,7 @@ Then set your credentials in `.env`:
 ```env
 PAYFAST_MERCHANT_ID=10000100
 PAYFAST_MERCHANT_KEY=46f0cd694581a
-PAYFAST_ENV=local
+PAYFAST_ENVIRONMENT=sandbox
 PAYFAST_RETURN_URL=https://example.com/success
 PAYFAST_CANCEL_URL=https://example.com/cancel
 PAYFAST_NOTIFY_URL=https://example.com/notify
@@ -48,7 +49,7 @@ Pass a config array directly:
 $config = [
     'merchant_id'  => '10000100',
     'merchant_key' => '46f0cd694581a',
-    'env'          => 'local',           // 'local' or 'production'
+    'environment'  => 'sandbox',         // 'sandbox' or 'production'
     'return_url'   => 'https://example.com/success',
     'cancel_url'   => 'https://example.com/cancel',
     'notify_url'   => 'https://example.com/notify',
@@ -128,6 +129,34 @@ $input = [
 
 echo $payFast->createSubscriptionWithAForm($input)->createForm();
 ```
+
+### Native v2 Client
+
+```php
+use rainwaves\PayfastPayment\Client\PayFastClient;
+use rainwaves\PayfastPayment\Request\PauseSubscriptionRequest;
+
+$payfast = PayFastClient::make($config);
+
+$pause = $payfast->subscriptions()->pause(
+    'subscription-token',
+    new PauseSubscriptionRequest(1)
+);
+
+if ($pause->successful()) {
+    // Update your application-owned subscription state.
+}
+```
+
+Supported native subscription operations:
+
+- fetch
+- pause
+- unpause
+- cancel
+- update
+- ad hoc charge
+- card-update link generation
 
 ### Optional Payment Fields
 
@@ -212,6 +241,36 @@ if ($response->isComplete()) {
 ```
 
 > **Tip:** PayFast requires a passphrase on your account for recurring billing. Without one, subscription signatures will fail.
+
+### v2 Orchestrated ITN Validation
+
+```php
+use rainwaves\PayfastPayment\Client\PayFastClient;
+use rainwaves\PayfastPayment\Request\ExpectedPayment;
+use rainwaves\PayfastPayment\Support\Money;
+
+$payfast = PayFastClient::make($config);
+
+$result = $payfast->itn()->validate(
+    payload: $_POST,
+    rawBody: file_get_contents('php://input'),
+    remoteIp: $_SERVER['REMOTE_ADDR'],
+    expected: new ExpectedPayment('10000100', Money::zar('100.00')),
+    confirmWithPayFast: true
+);
+
+if (!$result->valid()) {
+    http_response_code(400);
+    exit;
+}
+```
+
+The host application still owns `pf_payment_id` replay protection, persistence, routes, controllers, authorization, and billing policy.
+
+## v2 Docs
+
+- [PayFast API contract](docs/payfast-api-contract.md)
+- [Migration from v1 to v2](docs/migration-v1-to-v2.md)
 
 ## Testing
 

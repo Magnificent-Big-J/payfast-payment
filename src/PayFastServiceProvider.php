@@ -3,8 +3,13 @@
 namespace rainwaves\PayfastPayment;
 
 use Illuminate\Support\ServiceProvider;
+use rainwaves\PayfastPayment\Client\PayFastClient as NativePayFastClient;
+use rainwaves\PayfastPayment\Client\SubscriptionClient;
+use rainwaves\PayfastPayment\Client\ItnClient;
+use rainwaves\PayfastPayment\Contract\ItnValidatorInterface;
 use rainwaves\PayfastPayment\Contract\PayFastInterface;
 use rainwaves\PayfastPayment\Contract\PayFastSubscriptionInterface;
+use rainwaves\PayfastPayment\Contract\SubscriptionClientInterface;
 
 class PayFastServiceProvider extends ServiceProvider
 {
@@ -26,6 +31,18 @@ class PayFastServiceProvider extends ServiceProvider
         $this->app->bind(PayFastSubscriptionInterface::class, function () {
             return new PayFastSubscription($this->resolveConfig());
         });
+
+        $this->app->bind(NativePayFastClient::class, function () {
+            return NativePayFastClient::make($this->resolveConfig());
+        });
+
+        $this->app->bind(SubscriptionClientInterface::class, function () {
+            return new SubscriptionClient($this->resolveConfig());
+        });
+
+        $this->app->bind(ItnValidatorInterface::class, function () {
+            return new ItnClient($this->resolveConfig());
+        });
     }
 
     private function resolveConfig(): array
@@ -33,7 +50,8 @@ class PayFastServiceProvider extends ServiceProvider
         return [
             'merchant_id'  => config('payfast.merchant_id'),
             'merchant_key' => config('payfast.merchant_key'),
-            'env'          => config('payfast.env'),
+            'environment'  => config('payfast.environment', config('payfast.env')),
+            'env'          => config('payfast.env', config('payfast.environment')),
             'return_url'   => config('payfast.return_url'),
             'cancel_url'   => config('payfast.cancel_url'),
             'notify_url'   => config('payfast.notify_url'),

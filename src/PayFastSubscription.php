@@ -14,6 +14,7 @@ class PayFastSubscription implements PayFastSubscriptionInterface
     private PayFastSubscriptionInterface $payFastSubscription;
     public function __construct(array $config)
     {
+        $config['env'] = $config['environment'] ?? $config['env'] ?? 'sandbox';
         $config['url'] = Route::getUrl($config['env']);
         $this->config = (object)$config;
         $this->payFastSubscription = new PayFastSubscriptionClient($this->config);

@@ -1,5 +1,24 @@
 # Changelog
 
+## v2.0.0 - Unreleased
+
+### Added
+- Native v2 client factory via `Client\PayFastClient::make()`.
+- Native subscription API client for fetch, pause, unpause, cancel, update, ad hoc charge, and card-update link generation.
+- API signing, canonicalization, route resolution, HTTP request/response objects, cURL transport, response decoder, clock, redactor, and typed result objects.
+- Orchestrated ITN validation client with per-check result reporting.
+- v2 API contract and migration documentation.
+- Offline tests for API signing, money handling, redaction, route generation, and subscription request construction.
+
+### Changed
+- v2 runtime target is PHP 8.2-8.5 and Laravel 11-13.
+- `environment` is the preferred config key; legacy `env` values such as `local` still map to sandbox.
+- `docs/v2-design.md` now points to the native/headless v2 direction and no longer proposes migrations, routes, controllers, or Vue components.
+
+### Security
+- API calls go through a transport boundary with TLS verification, timeouts, redirects disabled, bounded response handling, and no automatic retry for mutation calls.
+- Sensitive fields and token-like values are redacted from diagnostic payloads.
+
 ## v1.7.0 - 2026-04-24
 
 ### Added

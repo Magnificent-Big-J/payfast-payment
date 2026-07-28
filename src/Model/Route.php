@@ -3,32 +3,28 @@
 namespace rainwaves\PayfastPayment\Model;
 
 use rainwaves\PayfastPayment\Exception\PayFastException;
+use rainwaves\PayfastPayment\Support\Environment;
+use rainwaves\PayfastPayment\Support\RouteResolver;
 
 class Route
 {
     private const LOCAL      = 'local';
+    private const SANDBOX    = 'sandbox';
     private const PRODUCTION = 'production';
 
     private static array $sites = [
         self::LOCAL      => 'https://sandbox.payfast.co.za/eng/process',
+        self::SANDBOX    => 'https://sandbox.payfast.co.za/eng/process',
         self::PRODUCTION => 'https://www.payfast.co.za/eng/process',
     ];
 
     public static function getUrl(string $env): string
     {
-        if (!array_key_exists($env, self::$sites)) {
-            throw PayFastException::invalidEnvironment($env, array_keys(self::$sites));
-        }
-
-        return self::$sites[$env];
+        return (new RouteResolver())->checkoutUrl(Environment::normalize($env));
     }
 
     public static function getValidationUrl(string $env): string
     {
-        if ($env === self::PRODUCTION) {
-            return 'https://www.payfast.co.za/eng/query/validate';
-        }
-
-        return 'https://sandbox.payfast.co.za/eng/query/validate';
+        return (new RouteResolver())->validationUrl(Environment::normalize($env));
     }
 }

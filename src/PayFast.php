@@ -14,6 +14,7 @@ class PayFast implements PayFastInterface
     private PayFastClient $payFastClient;
     public function __construct(array $config)
     {
+        $config['env'] = $config['environment'] ?? $config['env'] ?? 'sandbox';
         $config['url'] = Route::getUrl($config['env']);
         $this->config = (object)$config;
         $this->payFastClient = new PayFastClient($this->config);
