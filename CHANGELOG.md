@@ -12,6 +12,7 @@
 - ITN validation result diagnostics for endpoint confirmation failures.
 - v2 API contract and migration documentation.
 - Offline tests for API signing, money handling, redaction, route generation, and subscription request construction.
+- Laravel Testbench smoke coverage for package config and service-container bindings.
 
 ### Changed
 - v2 runtime target is PHP 8.2-8.5 and Laravel 11-13.

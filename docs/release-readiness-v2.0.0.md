@@ -12,6 +12,7 @@ Native v2 implementation foundation is in place:
 - v1 checkout and subscription-form compatibility retained
 - v2 migration and protocol docs added
 - GitHub Actions workflow added for quality checks and PHP/Laravel matrix runs
+- Laravel Testbench smoke coverage added for config merging and package bindings
 
 ## Local Gates Passing
 
@@ -25,6 +26,8 @@ find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
 git diff --check
 ```
 
+The PHPUnit suite includes a Laravel Testbench smoke test for package config merging and service-container bindings.
+
 ## Stable Release Blockers
 
 Do not tag `v2.0.0` until these are resolved:
@@ -35,7 +38,7 @@ Do not tag `v2.0.0` until these are resolved:
 - Card-update link behavior on sandbox must be verified.
 - PHP 8.2, 8.3, 8.4, and 8.5 matrix has not been run on GitHub Actions.
 - Laravel 11, 12, and 13 matrix has not been run on GitHub Actions.
-- Clean Laravel installation smoke test has not been run.
+- External clean Laravel installation smoke test has not been run.
 - Procurement temporary-branch installation smoke test has not been run.
 
 ## Release Decision
