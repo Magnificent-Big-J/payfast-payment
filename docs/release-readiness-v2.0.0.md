@@ -39,6 +39,28 @@ php artisan vendor:publish --tag=payfast-config --force
 
 The temporary app resolved the legacy checkout/subscription contracts, native client, native subscription client, and ITN validator from the service container.
 
+GitHub Actions passed on `release/v2.0.0-candidate` at commit `65920f7815ba77a7e3065451885e38d9eaf68d42`:
+
+- Quality job
+- PHP 8.2 / Laravel 12
+- PHP 8.3 / Laravel 12
+- PHP 8.3 / Laravel 13
+- PHP 8.4 / Laravel 12
+- PHP 8.4 / Laravel 13
+- PHP 8.5 / Laravel 12
+- PHP 8.5 / Laravel 13
+
+Remote temporary-branch install smoke test passed with:
+
+```bash
+composer config repositories.payfast vcs https://github.com/Magnificent-Big-J/payfast-payment.git
+composer require rainwaves/payfast-payment:dev-release/v2.0.0-candidate
+php artisan package:discover
+php artisan vendor:publish --tag=payfast-config --force
+```
+
+The remote-branch package installed at commit `65920f7`, discovered its service provider, published config, and resolved the same Laravel service-container bindings as the local clean-install smoke test.
+
 ## Stable Release Blockers
 
 Do not tag `v2.0.0` until these are resolved:
@@ -47,9 +69,6 @@ Do not tag `v2.0.0` until these are resolved:
 - Disposable PayFast sandbox lifecycle has not been run.
 - Sandbox response fixtures have not been captured for every subscription operation.
 - Card-update link behavior on sandbox must be verified.
-- PHP 8.2, 8.3, 8.4, and 8.5 matrix has not been run on GitHub Actions.
-- Laravel 12 and 13 matrix has not been run on GitHub Actions.
-- Procurement temporary-branch installation smoke test has not been run.
 
 ## Release Decision
 
