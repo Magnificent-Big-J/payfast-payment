@@ -28,6 +28,17 @@ git diff --check
 
 The PHPUnit suite includes a Laravel Testbench smoke test for package config merging and service-container bindings.
 
+Clean Laravel install smoke test passed locally on PHP 8.4 against Laravel Framework 13.23.0:
+
+```bash
+composer create-project laravel/laravel /tmp/payfast-laravel-smoke-*
+composer require rainwaves/payfast-payment:*@dev
+php artisan package:discover
+php artisan vendor:publish --tag=payfast-config --force
+```
+
+The temporary app resolved the legacy checkout/subscription contracts, native client, native subscription client, and ITN validator from the service container.
+
 ## Stable Release Blockers
 
 Do not tag `v2.0.0` until these are resolved:
@@ -38,7 +49,6 @@ Do not tag `v2.0.0` until these are resolved:
 - Card-update link behavior on sandbox must be verified.
 - PHP 8.2, 8.3, 8.4, and 8.5 matrix has not been run on GitHub Actions.
 - Laravel 11, 12, and 13 matrix has not been run on GitHub Actions.
-- External clean Laravel installation smoke test has not been run.
 - Procurement temporary-branch installation smoke test has not been run.
 
 ## Release Decision
