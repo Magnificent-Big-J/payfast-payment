@@ -168,7 +168,19 @@ class PayFastItnValidator
         }
 
         $rawBodyNoSig = preg_replace('/(^|&)signature=[^&]*/', '', $this->rawBody);
-        $rawBodyNoSig = ltrim((string) $rawBodyNoSig, '&');
+        $rawBodyNoSig = trim((string) $rawBodyNoSig, '&');
+
+        if ($rawBodyNoSig !== '') {
+            $rawSignatureInput = $rawBodyNoSig;
+
+            if ($this->passPhrase !== null && $this->passPhrase !== '') {
+                $rawSignatureInput .= '&passphrase=' . urlencode($this->passPhrase);
+            }
+
+            if (hash_equals(md5($rawSignatureInput), (string) $this->data['signature'])) {
+                return true;
+            }
+        }
 
         // Parse so passphrase can be inserted at its correct alphabetical position.
         // PayFast sorts all fields (including passphrase) before signing, so we must

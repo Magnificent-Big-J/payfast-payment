@@ -74,6 +74,18 @@ class PayFastItnValidatorTest extends TestCase
         $this->assertTrue($validator->validateSignature());
     }
 
+    public function testValidateSignatureFromPayFastRawPostOrder(): void
+    {
+        $rawBody = 'm_payment_id=1234&pf_payment_id=9876&payment_status=COMPLETE&item_name=Test+Product&amount_gross=100.00&merchant_id=10000100&merchant_key=46f0cd694581a';
+        $signature = md5($rawBody . '&passphrase=' . urlencode($this->passPhrase));
+
+        parse_str($rawBody . '&signature=' . $signature, $data);
+
+        $validator = new PayFastItnValidator($data, $this->passPhrase, $rawBody . '&signature=' . $signature);
+
+        $this->assertTrue($validator->validateSignature());
+    }
+
     // --- Amount validation ---
 
     public function testValidateAmountPasses(): void

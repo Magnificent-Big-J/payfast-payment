@@ -30,13 +30,13 @@ php artisan vendor:publish --tag=payfast-config
 Then set your credentials in `.env`:
 
 ```env
-PAYFAST_MERCHANT_ID=10000100
-PAYFAST_MERCHANT_KEY=46f0cd694581a
+PAYFAST_MERCHANT_ID=your-merchant-id
+PAYFAST_MERCHANT_KEY=your-merchant-key
 PAYFAST_ENVIRONMENT=sandbox
 PAYFAST_RETURN_URL=https://example.com/success
 PAYFAST_CANCEL_URL=https://example.com/cancel
 PAYFAST_NOTIFY_URL=https://example.com/notify
-PAYFAST_PASS_PHRASE=your_passphrase
+PAYFAST_PASS_PHRASE=your-payfast-passphrase
 ```
 
 > **Note:** The legacy unprefixed env names (`MERCHANT_ID`, `MERCHANT_KEY`, `ENVIRONMENT`, etc.) still work as fallbacks, but `PAYFAST_` prefixed names are recommended to avoid conflicts with other packages.
@@ -47,13 +47,13 @@ Pass a config array directly:
 
 ```php
 $config = [
-    'merchant_id'  => '10000100',
-    'merchant_key' => '46f0cd694581a',
+    'merchant_id'  => 'your-merchant-id',
+    'merchant_key' => 'your-merchant-key',
     'environment'  => 'sandbox',         // 'sandbox' or 'production'
     'return_url'   => 'https://example.com/success',
     'cancel_url'   => 'https://example.com/cancel',
     'notify_url'   => 'https://example.com/notify',
-    'pass_phrase'  => 'your_passphrase',
+    'pass_phrase'  => 'your-payfast-passphrase',
 ];
 ```
 
@@ -266,6 +266,12 @@ if (!$result->valid()) {
 ```
 
 The host application still owns `pf_payment_id` replay protection, persistence, routes, controllers, authorization, and billing policy.
+
+## Privacy And POPIA
+
+This package builds PayFast requests, validates ITNs, and calls PayFast subscription APIs. It does not create database tables, retain payment records, or provide privacy notices, retention controls, or data-subject request workflows.
+
+Host applications remain responsible for lawful processing of personal information such as names, email addresses, payment references, subscription tokens, IP addresses, and ITN payloads. Store only the fields you need, protect merchant credentials and passphrases as secrets, redact diagnostic payloads before logging, and define retention/deletion rules that fit your POPIA and business obligations.
 
 ## v2 Docs
 

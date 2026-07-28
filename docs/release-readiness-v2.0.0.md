@@ -13,6 +13,9 @@ Native v2 implementation foundation is in place:
 - v2 migration and protocol docs added
 - GitHub Actions workflow added for quality checks and PHP/Laravel matrix runs
 - Laravel Testbench smoke coverage added for config merging and package bindings
+- Package config defaults hardened so published config no longer ships concrete merchant credentials or callback URLs
+- Root `LICENSE` and `SECURITY.md` governance files added
+- README privacy and POPIA responsibility guidance added for host applications
 
 ## Local Gates Passing
 
@@ -73,16 +76,15 @@ find app config routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
 git diff --check
 ```
 
-The starter app resolved v2 from the local path, added a PayFast v2 compatibility regression covering one-time checkout form generation, subscription checkout form generation, and signed ITN payment processing, and passed `52` tests with `256` assertions. Its unrelated dependency advisories were cleared by refreshing vulnerable dependency families before the final audit.
+The starter app resolved v2 from the local path, added a PayFast v2 compatibility regression covering one-time checkout form generation, subscription checkout form generation, signed ITN payment processing, return/cancel redirects, local browser-test records, subscription action token-gating, and raw PayFast post-order ITN handling, and passed `56` tests with `281` assertions. Its unrelated dependency advisories were cleared by refreshing vulnerable dependency families before the final audit.
 
 ## Stable Release Blockers
 
 Do not tag `v2.0.0` until these are resolved:
 
-- Remote `main` history still contains the old unwanted co-author trailer because branch protection blocks force-push cleanup.
-- Disposable PayFast sandbox lifecycle has not been run.
+- Remote `main` history still contains the old unwanted co-author trailer until branch history is rewritten and force-pushed.
+- Full native subscription API lifecycle still needs live sandbox evidence for fetch, pause, unpause, cancel, update, and ad hoc charge.
 - Sandbox response fixtures have not been captured for every subscription operation.
-- Card-update link behavior on sandbox must be verified.
 
 ## Release Decision
 

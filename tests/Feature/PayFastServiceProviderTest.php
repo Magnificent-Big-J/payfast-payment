@@ -23,9 +23,9 @@ class PayFastServiceProviderTest extends TestCase
 
     public function testDefaultPackageConfigIsMerged(): void
     {
-        $this->assertSame('10000100', config('payfast.merchant_id'));
+        $this->assertSame('', config('payfast.merchant_id'));
         $this->assertSame('sandbox', config('payfast.environment'));
-        $this->assertSame('https://www.example.com/success', config('payfast.return_url'));
+        $this->assertSame('', config('payfast.return_url'));
     }
 
     public function testLaravelContainerResolvesLegacyAndNativeBindings(): void

@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.0.0 - Unreleased
+## v2.0.0 - 2026-07-28
 
 ### Added
 - Native v2 client factory via `Client\PayFastClient::make()`.
@@ -13,17 +13,21 @@
 - v2 API contract and migration documentation.
 - Offline tests for API signing, money handling, redaction, route generation, and subscription request construction.
 - Laravel Testbench smoke coverage for package config and service-container bindings.
+- Security policy and root MIT license files.
+- Privacy and POPIA host-responsibility guidance.
 
 ### Changed
 - v2 runtime target is PHP 8.2-8.5 and Laravel 12-13.
 - `environment` is the preferred config key; legacy `env` values such as `local` still map to sandbox.
 - `docs/v2-design.md` now points to the native/headless v2 direction and no longer proposes migrations, routes, controllers, or Vue components.
+- Published Laravel config defaults no longer include concrete merchant credentials or callback URLs. Host applications must provide their own `PAYFAST_*` values.
 
 ### Security
 - API calls go through a transport boundary with TLS verification, timeouts, redirects disabled, bounded response handling, and no automatic retry for mutation calls.
 - Sensitive fields and token-like values are redacted from diagnostic payloads.
 - Subscription API responses reject unsupported content types and malformed JSON.
 - ITN amount validation now compares normalized decimal strings instead of float-formatted values.
+- ITN raw-body validation now accepts PayFast's posted field order before falling back to sorted canonical validation, matching sandbox ITN behavior observed during browser testing.
 
 ## v1.7.0 - 2026-04-24
 
