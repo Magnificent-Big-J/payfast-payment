@@ -7,14 +7,25 @@ use InvalidArgumentException;
 final class Money
 {
     private string $amount;
+    private int $cents;
 
     private function __construct(string $amount)
     {
-        if (!preg_match('/^\d+(\.\d{1,2})?$/', $amount)) {
+        $amount = trim($amount);
+
+        if (!preg_match('/^(0|[1-9]\d*)(\.\d{1,2})?$/', $amount)) {
             throw new InvalidArgumentException('PayFast money amounts must be positive decimal strings.');
         }
 
-        $this->amount = number_format((float) $amount, 2, '.', '');
+        [$rands, $cents] = array_pad(explode('.', $amount, 2), 2, '');
+        $cents = str_pad($cents, 2, '0');
+        $this->cents = ((int) $rands * 100) + (int) $cents;
+
+        if ($this->cents <= 0) {
+            throw new InvalidArgumentException('PayFast money amounts must be greater than zero.');
+        }
+
+        $this->amount = $rands . '.' . $cents;
     }
 
     public static function zar(string $amount): self
@@ -29,7 +40,7 @@ final class Money
 
     public function toCents(): int
     {
-        return (int) round(((float) $this->amount) * 100);
+        return $this->cents;
     }
 
     public function __toString(): string
@@ -37,4 +48,3 @@ final class Money
         return $this->toDecimal();
     }
 }
-

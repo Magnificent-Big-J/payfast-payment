@@ -82,6 +82,7 @@ class PayFastItnValidatorTest extends TestCase
 
         $this->assertTrue($validator->validateAmount('100.00'));
         $this->assertTrue($validator->validateAmount('100'));
+        $this->assertTrue($validator->validateAmount('100.0'));
     }
 
     public function testValidateAmountFailsOnMismatch(): void

@@ -7,6 +7,7 @@
 - Native subscription API client for fetch, pause, unpause, cancel, update, ad hoc charge, and card-update link generation.
 - API signing, canonicalization, route resolution, HTTP request/response objects, cURL transport, response decoder, clock, redactor, and typed result objects.
 - Configuration exception for missing subscription API credentials.
+- String-based `Money` value object for v2 decimal and cents handling without float math.
 - Orchestrated ITN validation client with per-check result reporting.
 - v2 API contract and migration documentation.
 - Offline tests for API signing, money handling, redaction, route generation, and subscription request construction.
@@ -20,6 +21,7 @@
 - API calls go through a transport boundary with TLS verification, timeouts, redirects disabled, bounded response handling, and no automatic retry for mutation calls.
 - Sensitive fields and token-like values are redacted from diagnostic payloads.
 - Subscription API responses reject unsupported content types and malformed JSON.
+- ITN amount validation now compares normalized decimal strings instead of float-formatted values.
 
 ## v1.7.0 - 2026-04-24
 

@@ -42,8 +42,12 @@ class PayFastItnValidator
             return false;
         }
 
-        $expected = sprintf('%.2f', (float) $expectedAmount);
-        $actual   = sprintf('%.2f', (float) $this->data['amount_gross']);
+        $expected = $this->normalizeAmount($expectedAmount);
+        $actual   = $this->normalizeAmount((string) $this->data['amount_gross']);
+
+        if ($expected === null || $actual === null) {
+            return false;
+        }
 
         return hash_equals($expected, $actual);
     }
@@ -186,5 +190,18 @@ class PayFastItnValidator
         }
 
         return hash_equals(md5(PayFastSignatureHelper::buildQuery($fields)), (string) $this->data['signature']);
+    }
+
+    private function normalizeAmount(string $amount): ?string
+    {
+        $amount = trim($amount);
+
+        if (!preg_match('/^(0|[1-9]\d*)(\.\d{1,2})?$/', $amount)) {
+            return null;
+        }
+
+        [$rands, $cents] = array_pad(explode('.', $amount, 2), 2, '');
+
+        return $rands . '.' . str_pad($cents, 2, '0');
     }
 }

@@ -42,6 +42,25 @@ class PayFastApiSignatureTest extends TestCase
         $this->assertSame(4990, $money->toCents());
     }
 
+    public function testMoneyNormalizesDecimalStringsWithoutFloatMath(): void
+    {
+        $this->assertSame('49.00', Money::zar('49')->toDecimal());
+        $this->assertSame('49.90', Money::zar('49.9')->toDecimal());
+        $this->assertSame(123456789, Money::zar('1234567.89')->toCents());
+    }
+
+    public function testMoneyRejectsZeroAndInvalidDecimals(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Money::zar('0.00');
+    }
+
+    public function testMoneyRejectsMoreThanTwoDecimalPlaces(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Money::zar('10.999');
+    }
+
     public function testRouteResolverBuildsSandboxApiAndCardUpdateUrls(): void
     {
         $routes = new RouteResolver();
@@ -69,4 +88,3 @@ class PayFastApiSignatureTest extends TestCase
         $this->assertSame('2afa45...a7b0', $redacted['token']);
     }
 }
-
