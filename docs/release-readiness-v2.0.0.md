@@ -61,6 +61,20 @@ php artisan vendor:publish --tag=payfast-config --force
 
 The remote-branch package installed at commit `65920f7`, discovered its service provider, published config, and resolved the same Laravel service-container bindings as the local clean-install smoke test.
 
+Rainwaves starter-template local upgrade smoke passed at package commit `188ddfb7edff4cd8b0e46aa5dd96c8a0077737ba` using `/home/eclaims/htdocs/rainwaves-starter`:
+
+```bash
+composer config repositories.payfast path /home/eclaims/package-development/rainwaves/payfast-payment
+composer require rainwaves/payfast-payment:dev-main --with-all-dependencies
+php artisan test
+composer validate --strict --no-check-publish
+composer audit
+find app config routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
+git diff --check
+```
+
+The starter app resolved v2 from the local path, added a PayFast v2 compatibility regression covering one-time checkout form generation, subscription checkout form generation, and signed ITN payment processing, and passed `52` tests with `256` assertions. Its unrelated dependency advisories were cleared by refreshing vulnerable dependency families before the final audit.
+
 ## Stable Release Blockers
 
 Do not tag `v2.0.0` until these are resolved:
