@@ -77,6 +77,9 @@ $result = $payfast->itn()->validate(
 );
 
 if (!$result->valid()) {
+    $checks = $result->checks();
+    $errors = $result->errors();
+
     http_response_code(400);
     exit;
 }
@@ -95,4 +98,3 @@ v2 does not include:
 - Plan/pricing/invoice logic
 - Automated dunning
 - Webhook persistence
-

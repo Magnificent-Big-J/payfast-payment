@@ -42,6 +42,40 @@ class ItnClientTest extends TestCase
         $this->assertSame('9876', $result->paymentId());
         $this->assertSame('COMPLETE', $result->paymentStatus());
         $this->assertSame('[redacted]', $result->payload()['signature']);
+        $this->assertSame([], $result->errors());
+    }
+
+    public function testValidateDistinguishesEndpointConfirmationFailure(): void
+    {
+        $payload = [
+            'merchant_id' => '10000100',
+            'm_payment_id' => '1234',
+            'pf_payment_id' => '9876',
+            'amount_gross' => '100.00',
+            'item_name' => 'Test Product',
+            'payment_status' => 'COMPLETE',
+        ];
+        $payload['signature'] = $this->sign($payload, 'secret');
+
+        $client = new ItnClient([
+            'environment' => 'sandbox',
+            'pass_phrase' => 'secret',
+        ], static function (): bool {
+            throw new \RuntimeException('Endpoint unavailable');
+        });
+
+        $result = $client->validate(
+            payload: $payload,
+            rawBody: null,
+            remoteIp: '196.33.227.240',
+            expected: new ExpectedPayment('10000100', Money::zar('100.00')),
+            confirmWithPayFast: true
+        );
+
+        $this->assertFalse($result->valid());
+        $this->assertFalse($result->checks()['server_confirmation']);
+        $this->assertSame(\RuntimeException::class, $result->errors()['server_confirmation']['type']);
+        $this->assertSame('Endpoint unavailable', $result->errors()['server_confirmation']['message']);
     }
 
     private function sign(array $payload, string $passPhrase): string

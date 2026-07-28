@@ -9,6 +9,7 @@
 - Configuration exception for missing subscription API credentials.
 - String-based `Money` value object for v2 decimal and cents handling without float math.
 - Orchestrated ITN validation client with per-check result reporting.
+- ITN validation result diagnostics for endpoint confirmation failures.
 - v2 API contract and migration documentation.
 - Offline tests for API signing, money handling, redaction, route generation, and subscription request construction.
 

@@ -16,13 +16,16 @@ final class ItnClient implements ItnValidatorInterface
     private string $passPhrase;
     private RouteResolver $routes;
     private Redactor $redactor;
+    /** @var callable|null */
+    private $endpointConfirmer;
 
-    public function __construct(array $config)
+    public function __construct(array $config, ?callable $endpointConfirmer = null)
     {
         $this->environment = Environment::normalize((string) ($config['environment'] ?? $config['env'] ?? Environment::SANDBOX));
         $this->passPhrase = (string) ($config['pass_phrase'] ?? '');
         $this->routes = new RouteResolver();
         $this->redactor = new Redactor();
+        $this->endpointConfirmer = $endpointConfirmer;
     }
 
     public function validate(
@@ -33,6 +36,7 @@ final class ItnClient implements ItnValidatorInterface
         bool $confirmWithPayFast = true
     ): ItnValidationResult {
         $validator = new PayFastItnValidator($payload, $this->passPhrase, $rawBody);
+        $errors = [];
         $checks = [
             'source_ip' => $validator->validateSourceIp($remoteIp, Environment::isSandbox($this->environment)),
             'signature' => $validator->validateSignature(),
@@ -42,11 +46,16 @@ final class ItnClient implements ItnValidatorInterface
 
         if ($confirmWithPayFast) {
             try {
-                $checks['server_confirmation'] = $validator->validateWithPayFastEndpoint(
-                    $this->routes->validationUrl($this->environment)
-                );
+                $validationUrl = $this->routes->validationUrl($this->environment);
+                $checks['server_confirmation'] = $this->endpointConfirmer !== null
+                    ? (bool) ($this->endpointConfirmer)($validator, $validationUrl)
+                    : $validator->validateWithPayFastEndpoint($validationUrl);
             } catch (\Throwable $e) {
                 $checks['server_confirmation'] = false;
+                $errors['server_confirmation'] = [
+                    'type' => $e::class,
+                    'message' => $e->getMessage(),
+                ];
             }
         }
 
@@ -54,8 +63,8 @@ final class ItnClient implements ItnValidatorInterface
             $checks,
             $validator->getPaymentId(),
             $validator->getPaymentStatus(),
-            $this->redactor->redact($payload)
+            $this->redactor->redact($payload),
+            $this->redactor->redact($errors)
         );
     }
 }
-

@@ -8,7 +8,8 @@ final class ItnValidationResult
         private array $checks,
         private ?string $paymentId,
         private ?string $paymentStatus,
-        private array $payload
+        private array $payload,
+        private array $errors = []
     ) {
     }
 
@@ -42,5 +43,9 @@ final class ItnValidationResult
     {
         return $this->payload;
     }
-}
 
+    public function errors(): array
+    {
+        return $this->errors;
+    }
+}
