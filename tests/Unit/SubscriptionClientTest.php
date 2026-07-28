@@ -10,6 +10,7 @@ use rainwaves\PayfastPayment\Http\HttpRequest;
 use rainwaves\PayfastPayment\Http\HttpResponse;
 use rainwaves\PayfastPayment\Http\ResponseDecoder;
 use rainwaves\PayfastPayment\Exception\InvalidResponseException;
+use rainwaves\PayfastPayment\Exception\ConfigurationException;
 use rainwaves\PayfastPayment\Request\AdhocChargeRequest;
 use rainwaves\PayfastPayment\Request\CardUpdateLinkRequest;
 use rainwaves\PayfastPayment\Request\PauseSubscriptionRequest;
@@ -52,6 +53,41 @@ class SubscriptionClientTest extends TestCase
         );
         $this->assertSame([], $http->request->body());
         $this->assertNotEmpty($http->request->headers()['signature']);
+    }
+
+    public function testProductionRequestsDoNotIncludeTestingQueryParameter(): void
+    {
+        $http = new CapturingHttpClient();
+        $client = new SubscriptionClient(array_merge($this->config(), [
+            'environment' => 'production',
+        ]), $http, new FixedClock());
+
+        $client->fetch('2afa4575-5628-051a-d0ed-4e071b56a7b0');
+
+        $this->assertSame(
+            'https://api.payfast.co.za/subscriptions/2afa4575-5628-051a-d0ed-4e071b56a7b0/fetch',
+            $http->request->url()
+        );
+    }
+
+    public function testProviderFailureResponseIsNormalizedAsUnsuccessfulResult(): void
+    {
+        $http = new CapturingHttpClient(new HttpResponse(401, ['content-type' => 'application/json'], json_encode([
+            'code' => 401,
+            'status' => 'failed',
+            'data' => [
+                'response' => false,
+                'message' => 'Merchant authorisation failed',
+            ],
+        ])));
+        $client = new SubscriptionClient($this->config(), $http, new FixedClock());
+
+        $result = $client->fetch('2afa4575-5628-051a-d0ed-4e071b56a7b0');
+
+        $this->assertFalse($result->successful());
+        $this->assertSame(401, $result->statusCode());
+        $this->assertSame('401', $result->providerCode());
+        $this->assertSame('Merchant authorisation failed', $result->providerMessage());
     }
 
     public function testUnpauseBuildsOfflineHttpRequest(): void
@@ -182,6 +218,33 @@ class SubscriptionClientTest extends TestCase
         (new ResponseDecoder())->decode(new HttpResponse(200, [], '{bad json'));
     }
 
+    public function testResponseDecoderRejectsUnsupportedContentType(): void
+    {
+        $this->expectException(InvalidResponseException::class);
+
+        (new ResponseDecoder())->decode(new HttpResponse(200, ['Content-Type' => 'text/html'], '<html></html>'));
+    }
+
+    public function testSubscriptionClientRequiresMerchantId(): void
+    {
+        $this->expectException(ConfigurationException::class);
+
+        new SubscriptionClient([
+            'pass_phrase' => 'secret',
+            'environment' => 'sandbox',
+        ], new CapturingHttpClient(), new FixedClock());
+    }
+
+    public function testSubscriptionClientRequiresPassphrase(): void
+    {
+        $this->expectException(ConfigurationException::class);
+
+        new SubscriptionClient([
+            'merchant_id' => '10000100',
+            'environment' => 'sandbox',
+        ], new CapturingHttpClient(), new FixedClock());
+    }
+
     private function config(): array
     {
         return [
@@ -196,11 +259,15 @@ final class CapturingHttpClient implements HttpClientInterface
 {
     public ?HttpRequest $request = null;
 
+    public function __construct(private ?HttpResponse $response = null)
+    {
+    }
+
     public function send(HttpRequest $request): HttpResponse
     {
         $this->request = $request;
 
-        return new HttpResponse(200, ['content-type' => 'application/json'], json_encode([
+        return $this->response ?? new HttpResponse(200, ['content-type' => 'application/json'], json_encode([
             'code' => 200,
             'status' => 'success',
             'data' => ['response' => true],

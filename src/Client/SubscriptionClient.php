@@ -5,6 +5,7 @@ namespace rainwaves\PayfastPayment\Client;
 use rainwaves\PayfastPayment\Contract\ClockInterface;
 use rainwaves\PayfastPayment\Contract\HttpClientInterface;
 use rainwaves\PayfastPayment\Contract\SubscriptionClientInterface;
+use rainwaves\PayfastPayment\Exception\ConfigurationException;
 use rainwaves\PayfastPayment\Http\CurlHttpClient;
 use rainwaves\PayfastPayment\Http\HttpRequest;
 use rainwaves\PayfastPayment\Http\ResponseDecoder;
@@ -37,6 +38,7 @@ final class SubscriptionClient implements SubscriptionClientInterface
         $this->merchantId = (string) ($config['merchant_id'] ?? '');
         $this->passPhrase = (string) ($config['pass_phrase'] ?? '');
         $this->environment = Environment::normalize((string) ($config['environment'] ?? $config['env'] ?? Environment::SANDBOX));
+        $this->assertConfigured();
         $this->http ??= new CurlHttpClient();
         $this->clock ??= new SystemClock();
         $this->routes = new RouteResolver();
@@ -129,5 +131,15 @@ final class SubscriptionClient implements SubscriptionClientInterface
             throw new \InvalidArgumentException('PayFast subscription token is required.');
         }
     }
-}
 
+    private function assertConfigured(): void
+    {
+        if (trim($this->merchantId) === '') {
+            throw new ConfigurationException('PayFast merchant_id is required for subscription API calls.');
+        }
+
+        if (trim($this->passPhrase) === '') {
+            throw new ConfigurationException('PayFast pass_phrase is required for subscription API calls.');
+        }
+    }
+}
