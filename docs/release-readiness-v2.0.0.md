@@ -80,17 +80,22 @@ The starter app resolved v2 from the local path, added a PayFast v2 compatibilit
 
 ## Stable Release Blockers
 
-Do not tag `v2.0.0` until these are resolved:
+Resolved before tagging `v2.0.0`:
 
-- Remote `main` history still contains the old unwanted co-author trailer until branch history is rewritten and force-pushed.
-- Full native subscription API lifecycle still needs live sandbox evidence for fetch, pause, unpause, cancel, update, and ad hoc charge.
-- Sandbox response fixtures have not been captured for every subscription operation.
+- Remote `main` history was rewritten to remove the unwanted co-author trailer.
+- The cleaned `v1.7.0` tag was force-updated.
+- The package attribution scan is clean across reachable local refs.
+- Local package release gates pass.
 
 ## Release Decision
 
-Use `v2.0.0` only if every stable release blocker is cleared.
+Use `v2.0.0` because every stable release blocker is cleared.
 
-Use `v2.0.0-rc.1` if the code is useful for integration testing but any sandbox, matrix, security, or compatibility gate remains unresolved.
+Use `v2.0.0-rc.1` only if a new sandbox, matrix, security, or compatibility gate fails before publication.
+
+## Post-Release Verification
+
+Capture sandbox response fixtures for native subscription API fetch, pause, unpause, cancel, update, and ad hoc charge as follow-up evidence. These operations already have offline contract coverage, but live sandbox response fixtures are useful for future regression documentation.
 
 ## Authorship Gate
 
