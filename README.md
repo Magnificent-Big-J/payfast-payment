@@ -12,10 +12,10 @@ composer require rainwaves/payfast-payment
 
 | Package | PHP | Laravel |
 |---------|-----|---------|
-| v2.x    | 8.2 – 8.5 | 11 – 13 |
+| v2.x    | 8.2 – 8.5 | 12 – 13 |
 | v1.7.x  | 7.4 – 8.5 | 10 – 13 |
 
-Laravel 10+ requires PHP 8.1+. Laravel 11+ requires PHP 8.2+. Laravel 12+ requires PHP 8.2+. Laravel 13+ requires PHP 8.3+.
+Laravel 10+ requires PHP 8.1+. Laravel 12+ requires PHP 8.2+. Laravel 13+ requires PHP 8.3+.
 
 ## Configuration
 

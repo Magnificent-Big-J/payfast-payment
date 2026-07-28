@@ -5,9 +5,9 @@
 v2 targets:
 
 - PHP 8.2-8.5
-- Laravel 11-13
+- Laravel 12-13
 
-Use v1.7.x for PHP 7.4-8.1 or Laravel 10 projects.
+Use v1.7.x for PHP 7.4-8.1 or Laravel 10-11 projects.
 
 ## Configuration
 

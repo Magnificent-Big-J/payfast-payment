@@ -15,7 +15,7 @@
 - Laravel Testbench smoke coverage for package config and service-container bindings.
 
 ### Changed
-- v2 runtime target is PHP 8.2-8.5 and Laravel 11-13.
+- v2 runtime target is PHP 8.2-8.5 and Laravel 12-13.
 - `environment` is the preferred config key; legacy `env` values such as `local` still map to sandbox.
 - `docs/v2-design.md` now points to the native/headless v2 direction and no longer proposes migrations, routes, controllers, or Vue components.
 

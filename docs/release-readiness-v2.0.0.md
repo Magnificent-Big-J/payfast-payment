@@ -4,7 +4,7 @@
 
 Native v2 implementation foundation is in place:
 
-- PHP 8.2-8.5 and Laravel 11-13 package constraints
+- PHP 8.2-8.5 and Laravel 12-13 package constraints
 - Native API signing and canonicalization
 - Native HTTP transport boundary and cURL transport
 - Native subscription API client
@@ -48,7 +48,7 @@ Do not tag `v2.0.0` until these are resolved:
 - Sandbox response fixtures have not been captured for every subscription operation.
 - Card-update link behavior on sandbox must be verified.
 - PHP 8.2, 8.3, 8.4, and 8.5 matrix has not been run on GitHub Actions.
-- Laravel 11, 12, and 13 matrix has not been run on GitHub Actions.
+- Laravel 12 and 13 matrix has not been run on GitHub Actions.
 - Procurement temporary-branch installation smoke test has not been run.
 
 ## Release Decision
