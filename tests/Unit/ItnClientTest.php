@@ -4,13 +4,27 @@ namespace rainwaves\PayfastPayment\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use rainwaves\PayfastPayment\Client\ItnClient;
+use rainwaves\PayfastPayment\Itn\PayFastIpValidator;
 use rainwaves\PayfastPayment\Request\ExpectedPayment;
 use rainwaves\PayfastPayment\Support\Money;
 
 class ItnClientTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        PayFastIpValidator::resetResolver();
+    }
+
     public function testValidateReportsEachOfflineCheck(): void
     {
+        // PayFastIpValidator resolves real hostnames via DNS -- fake it so
+        // this stays a genuinely offline test (see its own class docblock
+        // for why it's DNS-based at all).
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'sandbox.payfast.co.za' => ['196.33.227.240'],
+            default                 => [],
+        });
+
         $payload = [
             'merchant_id' => '10000100',
             'm_payment_id' => '1234',
@@ -56,6 +70,11 @@ class ItnClientTest extends TestCase
             'payment_status' => 'COMPLETE',
         ];
         $payload['signature'] = $this->sign($payload, 'secret');
+
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'sandbox.payfast.co.za' => ['196.33.227.240'],
+            default                 => [],
+        });
 
         $client = new ItnClient([
             'environment' => 'sandbox',

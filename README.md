@@ -242,6 +242,14 @@ if ($response->isComplete()) {
 
 > **Tip:** PayFast requires a passphrase on your account for recurring billing. Without one, subscription signatures will fail.
 
+> **Note on source IP validation:** `validateSourceIp()` resolves PayFast's own validation
+> hostnames (`www`/`sandbox`/`w1w`/`w2w`.payfast.co.za) via live DNS at request time and checks
+> the incoming IP against whatever they currently resolve to, matching PayFast's own reference
+> implementation — it no longer checks against a hardcoded IP list (an earlier static-CIDR
+> version of this check went stale as PayFast's real serving infrastructure grew). This means
+> your notify-url handler needs outbound DNS resolution to work; if DNS is unreachable, every ITN
+> is rejected (fail closed) rather than silently accepted.
+
 ### v2 Orchestrated ITN Validation
 
 ```php

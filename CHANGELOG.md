@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.0.1 - 2026-08-03
+
+### Fixed
+- `PayFastIpValidator` rewritten to validate source IPs via live DNS resolution against PayFast's
+  own documented hostnames (`www`/`sandbox`/`w1w`/`w2w`.payfast.co.za), matching PayFast's own
+  reference implementation, instead of hardcoded CIDR ranges. The hardcoded sandbox range
+  (`196.33.227.224/27`) never matched a real sandbox ITN observed arriving from
+  `144.126.193.139` — PayFast's current infrastructure spans a larger, rotating set of IPs across
+  multiple providers than any static list captures. `$sandboxMode` is kept on `isValid()` /
+  `validateSourceIp()` for source compatibility but no longer changes which hosts are checked
+  (PayFast's reference code doesn't split by environment either).
+- Added `PayFastIpValidator::fakeResolver()`/`resetResolver()` so this stays testable offline,
+  matching this package's existing "offline tests" precedent — no unit test depends on live DNS
+  or a network connection.
+
 ## v2.0.0 - 2026-07-28
 
 ### Added

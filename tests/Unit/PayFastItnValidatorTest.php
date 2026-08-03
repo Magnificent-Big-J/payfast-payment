@@ -26,6 +26,11 @@ class PayFastItnValidatorTest extends TestCase
         ];
     }
 
+    protected function tearDown(): void
+    {
+        PayFastIpValidator::resetResolver();
+    }
+
     // --- Signature validation ---
 
     public function testValidateSignaturePasses(): void
@@ -182,35 +187,112 @@ class PayFastItnValidatorTest extends TestCase
         $this->assertNull($response->nameLast);
     }
 
-    // --- IP allowlist validation ---
+    // --- IP validation (DNS-based, matching PayFast's own reference
+    // implementation -- see PayFastIpValidator's class docblock). Every test
+    // here fakes the resolver so none of them depend on live network access
+    // or PayFast's actual DNS records staying constant. ---
 
-    public function testIpValidatorAcceptsKnownProductionIp(): void
+    public function testIpValidatorAcceptsAnIpAnyValidHostnameResolvesTo(): void
     {
-        // 197.97.145.144/28 covers .144 – .159
-        $this->assertTrue(PayFastIpValidator::isValid('197.97.145.150', false));
-        // 41.74.179.192/27 covers .192 – .223
-        $this->assertTrue(PayFastIpValidator::isValid('41.74.179.200', false));
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'w1w.payfast.co.za' => ['197.97.145.150', '144.126.193.139'],
+            'w2w.payfast.co.za' => ['102.216.36.5'],
+            default             => [],
+        });
+
+        $this->assertTrue(PayFastIpValidator::isValid('197.97.145.150'));
+        $this->assertTrue(PayFastIpValidator::isValid('144.126.193.139'));
+        $this->assertTrue(PayFastIpValidator::isValid('102.216.36.5'));
     }
 
-    public function testIpValidatorRejectsUnknownIp(): void
+    public function testIpValidatorRejectsAnIpNoValidHostnameResolvesTo(): void
     {
-        $this->assertFalse(PayFastIpValidator::isValid('1.2.3.4', false));
-        $this->assertFalse(PayFastIpValidator::isValid('197.97.145.160', false)); // just outside /28
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'w1w.payfast.co.za' => ['197.97.145.150'],
+            default             => [],
+        });
+
+        $this->assertFalse(PayFastIpValidator::isValid('1.2.3.4'));
     }
 
-    public function testIpValidatorAcceptsSandboxIp(): void
+    public function testSandboxModeParameterNoLongerChangesWhichHostsAreChecked(): void
     {
-        // 196.33.227.224/27 covers .224 – .255
+        // PayFast's own reference implementation checks all four hostnames
+        // regardless of sandbox/production -- $sandboxMode is kept only for
+        // source compatibility with existing callers.
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'sandbox.payfast.co.za' => ['196.33.227.240'],
+            default                 => [],
+        });
+
+        $this->assertTrue(PayFastIpValidator::isValid('196.33.227.240', false));
         $this->assertTrue(PayFastIpValidator::isValid('196.33.227.240', true));
     }
 
-    public function testIpValidatorRejectsProductionIpInSandboxMode(): void
+    // --- Fallback when DNS resolution fails entirely (all four hostnames
+    // return nothing) -- guards against a transient outbound-DNS outage
+    // rejecting every ITN, which the pre-rewrite static-CIDR check could
+    // never suffer from. Deliberately a narrower net than live DNS; see the
+    // FALLBACK_RANGES/FALLBACK_IPS docblock in PayFastIpValidator. ---
+
+    public function testFallsBackToStaticRangesWhenDnsResolutionFailsEntirely(): void
     {
-        $this->assertFalse(PayFastIpValidator::isValid('197.97.145.150', true));
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => []);
+
+        // Within the fallback's 197.97.145.144/28 range.
+        $this->assertTrue(PayFastIpValidator::isValid('197.97.145.150'));
+        // The fallback's single explicitly-listed IP.
+        $this->assertTrue(PayFastIpValidator::isValid('144.126.193.139'));
+    }
+
+    public function testFallbackStillRejectsAnUnknownIpWhenDnsResolutionFailsEntirely(): void
+    {
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => []);
+
+        $this->assertFalse(PayFastIpValidator::isValid('1.2.3.4'));
+    }
+
+    public function testDoesNotFallBackWhenAtLeastOneHostnameResolves(): void
+    {
+        // Only one of the four hosts resolving is enough to skip the
+        // fallback and use exactly what DNS actually returned -- an IP that
+        // would only be valid under the fallback ranges must NOT pass here.
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'w1w.payfast.co.za' => ['144.126.193.139'],
+            default             => [],
+        });
+
+        $this->assertTrue(PayFastIpValidator::isValid('144.126.193.139'));
+        $this->assertFalse(PayFastIpValidator::isValid('197.97.145.150'));
+    }
+
+    public function testGetAllowedRangesReturnsTheCurrentlyResolvedIps(): void
+    {
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'w1w.payfast.co.za' => ['197.97.145.150', '144.126.193.139'],
+            default             => [],
+        });
+
+        $this->assertSame(['197.97.145.150', '144.126.193.139'], PayFastIpValidator::getAllowedRanges());
+    }
+
+    public function testGetAllowedRangesReturnsTheFallbackWhenDnsResolutionFailsEntirely(): void
+    {
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => []);
+
+        $ranges = PayFastIpValidator::getAllowedRanges();
+
+        $this->assertContains('144.126.193.139', $ranges);
+        $this->assertContains('197.97.145.144/28', $ranges);
     }
 
     public function testValidateSourceIpMethodDelegatesToIpValidator(): void
     {
+        PayFastIpValidator::fakeResolver(fn (string $hostname): array => match ($hostname) {
+            'w1w.payfast.co.za' => ['41.74.179.200'],
+            default             => [],
+        });
+
         $validator = new PayFastItnValidator($this->baseData);
 
         $this->assertFalse($validator->validateSourceIp('10.0.0.1', false));
